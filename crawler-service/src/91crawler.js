@@ -1,4 +1,3 @@
-const fs = require('fs');
 const async = require('async');
 
 const crawlerService = require('./service/crawler-service');
@@ -8,6 +7,7 @@ const redisClient = require('./redis-connector');
 // var logger = require('./utils/logger');
 
 redisClient.subscribe('crawl-job');
+// TODO: init freq map from persistence file?
 
 redisClient.on("message", function (channel, message) {
 	crawlJob(function notify(err, result) {

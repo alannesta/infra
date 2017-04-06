@@ -1,16 +1,16 @@
+const redisClient = require('../redis-connector');
 // console.log(dedupe(raw, generateFilterWords(raw)).length);
+
 const miningService = {
 	dedupteVideos: function(videos) {
-		return dedupe(videos, generateFilterWords(videos))
+		return dedupe(videos, generateFilterWords(videos));
 	}
 } ;
-
 
 function generateFilterWords(rawData) {
 	let collection = [...rawData];
 	console.time('filter_words');
-	// TODO: get freq map from redis
-	let dupeMap = {};
+	let dupeMap = (redisClient.get('frequent-words') && JSON.parse(redisClient.get('frequent-words'))) || {};
 	for (var i = 0; i < collection.length; i++) {
 		for (var j = i + 1; j < collection.length; j++) {
 			let {maxLen, endIndexA} = DPLCS(collection[i], collection[j]);
@@ -25,6 +25,7 @@ function generateFilterWords(rawData) {
 			}
 		}
 	}
+	redisClient.set('frequent-words', JSON.stringify(dupeMap));
 	let frequentWords = highFreq(dupeMap);
 	console.timeEnd('filter_words');
 	return frequentWords;
