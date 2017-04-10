@@ -10,7 +10,8 @@ const miningService = {
 function generateFilterWords(rawData) {
 	let collection = [...rawData];
 	console.time('filter_words');
-	let dupeMap = (redisClient.get('frequent-words') && JSON.parse(redisClient.get('frequent-words'))) || {};
+	//let dupeMap = (redisClient.get('frequent-words') && JSON.parse(redisClient.get('frequent-words'))) || {};
+	let dupeMap = {};
 	for (var i = 0; i < collection.length; i++) {
 		for (var j = i + 1; j < collection.length; j++) {
 			let {maxLen, endIndexA} = DPLCS(collection[i], collection[j]);
@@ -25,7 +26,7 @@ function generateFilterWords(rawData) {
 			}
 		}
 	}
-	redisClient.set('frequent-words', JSON.stringify(dupeMap));
+	//redisClient.set('frequent-words', JSON.stringify(dupeMap));
 	let frequentWords = highFreq(dupeMap);
 	console.timeEnd('filter_words');
 	return frequentWords;

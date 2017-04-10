@@ -12,16 +12,18 @@ redisClient.subscribe('crawl-job');
 redisClient.on("message", function (channel, message) {
 	crawlJob(function notify(err, result) {
 		if (err) {
-			return redisClient.publish('crawl-job', JSON.stringify(err));
+			console.log(err);
 		}
-		redisClient.publish('crawl-job', JSON.stringify(result));
+		// !!! A client subscribed to one or more channels could not issue commands (GET, PUBLISH, SET)
+		// redisClient.publish('report', JSON.stringify(result));
+		console.log(result.length);
 	});
 	// redisClient.quit();
 });
 
 function crawlJob(callback) {
 	const urlPool = [];
-	const fetchedVideos = [];
+	let fetchedVideos = [];
 
 	const crawlStatistic = {
 		added: 0,
@@ -43,15 +45,17 @@ function crawlJob(callback) {
 		});
 
 		// MQ notification
+		//callback(null, fetchedVideos);
 		callback(null, dedupedVideos);
 	});
 
 
 	function fetchVideo(url, callback) {
+		console.log(url);
 		crawlerService.crawl(url).then(function(videos){
 			// TODO: dedupe
-			fetchedVideos.push(videos);
-
+			fetchedVideos = fetchedVideos.concat(videos);
+			callback(null);
 			// dbService.save(videos, function(err, statistic) {
 			// 	if (!err) {
 			// 		logger.debug('fetching done for: ' + url);
