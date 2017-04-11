@@ -18,7 +18,7 @@ subClient.on("message", function (channel, message) {
 			console.log(err);
 		}
 		// !!! A client subscribed to one or more channels could not issue commands (GET, PUBLISH, SET)
-		pubClient.publish('report', JSON.stringify(result));
+		pubClient.publish('crawl-report', JSON.stringify(result));
 		logger.debug('crawl results: ', result.length);
 	});
 });

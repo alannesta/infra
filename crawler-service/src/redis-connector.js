@@ -1,10 +1,18 @@
-const redis = require("redis");
+const redis = require('redis');
+const logger = require('./service/logger');
 
 // TODO: configuration with env variables
 //const client1 = redis.createClient('//127.0.0.1:6379');
 
 const getConnection = function(redisUrl) {
-	return redis.createClient(redisUrl);
+	var client = redis.createClient(redisUrl || process.env.REDIS_URL || '//127.0.0.1:6379', {
+		retry_strategy: function() {
+			logger.error('redis connection failed');
+			// do not retry
+			return null;
+		},
+	});
+	return client;
 };
 
 module.exports = getConnection;
