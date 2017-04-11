@@ -1,9 +1,13 @@
 const redis = require("redis");
 
 // TODO: configuration with env variables
-const client = redis.createClient('//127.0.0.1:6379');
+//const client1 = redis.createClient('//127.0.0.1:6379');
 
-module.exports = client;
+const getConnection = function(redisUrl) {
+	return redis.createClient(redisUrl);
+};
+
+module.exports = getConnection;
 // let msg_count = 0;
 
 // client.set('pool', 'task1');
@@ -13,15 +17,10 @@ module.exports = client;
 // 	console.dir(obj);
 // });
 //
-// client.on("message", function (channel, message) {
-// 	console.log("sub channel " + channel + ": " + message);
-// 	msg_count += 1;
-// 	if (msg_count === 3) {
-// 		client.unsubscribe();
-// 		client.quit();
-// 	}
+// client2.on("message", function (channel, message) {
+// 	console.log(message);
 // });
 //
-// client.subscribe("crawler");
+// client2.subscribe("report");
 
 // client.quit();

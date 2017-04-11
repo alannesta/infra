@@ -2,27 +2,29 @@ const async = require('async');
 
 const crawlerService = require('./service/crawler-service');
 const miningService = require('./service/mining-service');
-const redisClient = require('./redis-connector');
+const createRedisConnection = require('./redis-connector');
 
-// var logger = require('./utils/logger');
+// TODO: configuration with env variables
+const pubClient = createRedisConnection('//127.0.0.1:6379');	// redis connection for GET/SET/PUB
+const subClient = createRedisConnection('//127.0.0.1:6379');	// redis connection for subscribe
+const logger = require('./service/logger');
 
-redisClient.subscribe('crawl-job');
+subClient.subscribe('crawl-job');
 // TODO: init freq map from persistence file?
 
-redisClient.on("message", function (channel, message) {
+subClient.on("message", function (channel, message) {
 	crawlJob(function notify(err, result) {
 		if (err) {
 			console.log(err);
 		}
 		// !!! A client subscribed to one or more channels could not issue commands (GET, PUBLISH, SET)
-		// redisClient.publish('report', JSON.stringify(result));
-		console.log(result.length);
+		pubClient.publish('report', JSON.stringify(result));
+		logger.debug('crawl results: ', result.length);
 	});
-	// redisClient.quit();
 });
 
 function crawlJob(callback) {
-	const urlPool = [];
+	let urlPool = [];
 	let fetchedVideos = [];
 
 	const crawlStatistic = {
@@ -51,7 +53,7 @@ function crawlJob(callback) {
 
 
 	function fetchVideo(url, callback) {
-		console.log(url);
+		logger.debug('start crawling: ', url);
 		crawlerService.crawl(url).then(function(videos){
 			// TODO: dedupe
 			fetchedVideos = fetchedVideos.concat(videos);

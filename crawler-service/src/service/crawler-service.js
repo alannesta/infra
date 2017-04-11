@@ -2,7 +2,7 @@ const cheerio = require('cheerio');
 const request = require('request');
 const async = require('async');
 
-// var logger = require('../utils/logger');
+const logger = require('./logger');
 
 var CrawlerService = {
 	crawl: function(url) {
