@@ -17,6 +17,7 @@ subClient.on("message", function (channel, message) {
 		if (err) {
 			console.log(err);
 		}
+
 		// !!! A client subscribed to one or more channels could not issue commands (GET, PUBLISH, SET)
 		pubClient.publish('crawl-report', JSON.stringify(result));
 		logger.debug('crawl results: ', result.length);
@@ -38,17 +39,15 @@ function crawlJob(callback) {
 			callback(err);
 			// process.exit(err);
 		}
-		const dedupedTitles = miningService.dedupteVideos(fetchedVideos.map((video) => {
+
+		miningService.dedupeVideos(fetchedVideos.map((video) => {
 			return video['片名'];
-		}));
-
-		const dedupedVideos = fetchedVideos.filter((video) => {
-			return dedupedTitles.indexOf(video['片名']) > -1;
+		}), function dedupeCB(err, dedupedTitles) {
+			const dedupedVideos = fetchedVideos.filter((video) => {
+				return dedupedTitles.indexOf(video['片名']) > -1;
+			});
+			callback(null, dedupedVideos);
 		});
-
-		// MQ notification
-		//callback(null, fetchedVideos);
-		callback(null, dedupedVideos);
 	});
 
 
@@ -58,16 +57,6 @@ function crawlJob(callback) {
 			// TODO: dedupe
 			fetchedVideos = fetchedVideos.concat(videos);
 			callback(null);
-			// dbService.save(videos, function(err, statistic) {
-			// 	if (!err) {
-			// 		logger.debug('fetching done for: ' + url);
-			// 		crawlStatistic.added += statistic.added;
-			// 		crawlStatistic.updated += statistic.updated;
-			// 		callback(null);
-			// 	}else {
-			// 		callback(err);
-			// 	}
-			// });
 		});
 	}
 }

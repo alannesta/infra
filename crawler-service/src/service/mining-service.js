@@ -4,40 +4,56 @@ const logger = require('./logger');
 const redisClient = createRedisConnection();
 
 const miningService = {
-	dedupteVideos: function(videos) {
-		return dedupe(videos, generateFilterWords(videos));
+	dedupeVideos: function(videos, callback) {
+		dedupeWithFreqMap(videos, callback);
 	}
 } ;
 
-function generateFilterWords(rawData) {
+function dedupeWithFreqMap(rawData, callback) {
 	let collection = [...rawData];
+	let dupeMap = {};
+	let threshold = 5;
 	logger.debug('start generate filter words from frequency map');
 	console.time('filter_words');
-	let dupeMap = (redisClient.get('frequency-map') && JSON.parse(redisClient.get('frequency-map'))) || {};
-	logger.debug('frequency map: ', dupeMap);
 
-	for (var i = 0; i < collection.length; i++) {
-		for (var j = i + 1; j < collection.length; j++) {
-			let {maxLen, endIndexA} = DPLCS(collection[i], collection[j]);
-			if (maxLen > 7) {
-				let dupeStr = collection[i].substring(endIndexA - maxLen + 1, endIndexA + 1);
-				if (typeof dupeMap[dupeStr] === 'number') {
-					dupeMap[dupeStr]++;
-				}else {
-					dupeMap[dupeStr] = 1;
+	redisClient.get('frequency-map', function(err, map) {
+		try {
+			if (map) {
+				dupeMap = JSON.parse(map);
+				logger.debug('mining-service::dedupeWithFreqMap:dedupe using dedupe map: ', dupeMap);
+			} else {
+				logger.debug('skip using freq map, dupe threshold set to 2');
+				threshold = 2;	// frequency
+			}
+		} catch (err) {
+			logger.error('skip using freq map, dupe threshold set to 2');
+			threshold = 2;	// frequency
+		}
+		for (var i = 0; i < collection.length; i++) {
+			for (var j = i + 1; j < collection.length; j++) {
+				let {maxLen, endIndexA} = DPLCS(collection[i], collection[j]);
+				if (maxLen > 7) {
+					let dupeStr = collection[i].substring(endIndexA - maxLen + 1, endIndexA + 1);
+					if (typeof dupeMap[dupeStr] === 'number') {
+						dupeMap[dupeStr]++;
+					}else {
+						dupeMap[dupeStr] = 1;
+					}
+					collection[j] = '';
 				}
-				collection[j] = '';
 			}
 		}
-	}
-	redisClient.set('frequency-map', JSON.stringify(dupeMap));
-	let frequentWords = highFreq(dupeMap);
-	console.timeEnd('filter_words');
-	return frequentWords;
+		redisClient.set('frequency-map', JSON.stringify(dupeMap));
+		let frequentWords = highFreq(dupeMap, threshold);
+		console.timeEnd('filter_words');
+		callback(null, dedupe(rawData, frequentWords));
+
+	});
 }
 
 function dedupe(rawData, filterWords) {
 	let collection = [...rawData];
+	let removed = [];
 	logger.debug('start dedupe');
 	console.time('dedupe');
 	for (var i = 0; i < collection.length; i++) {
@@ -48,12 +64,14 @@ function dedupe(rawData, filterWords) {
 			if (collection[j].length > 0) {
 				let {maxLen} = DPLCS(filterJunkWord(collection[i], filterWords), collection[j]);
 				if (maxLen > 7) {
+					removed.push(collection[j]);
 					collection[j] = '';
 				}
 			}
 		}
 	}
 	console.timeEnd('dedupe');
+	logger.debug('mining-service::dedupe -> removed items: ', removed);
 	let result = collection.filter((word) => {
 		return word.length > 0;
 	});
@@ -65,9 +83,9 @@ function dedupe(rawData, filterWords) {
 }
 
 // extract high frequency terms from a map to an array
-function highFreq(map) {
+function highFreq(map, threshold = 5) {
 	return Object.keys(map).filter((key) => {
-		return map[key] > 5;
+		return map[key] > threshold;
 	});
 }
 
