@@ -23,7 +23,7 @@ function getTransportConfig(env) {
 		// do not write to files on docker
 		return [
 			new (winston.transports.Console)({
-				level: 'info',
+				level: 'debug',
 				stderrLevels: ['error'],
 			}),
 		];

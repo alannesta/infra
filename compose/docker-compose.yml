@@ -6,3 +6,11 @@ services:
         - "6379:6379"
     restart: always
 
+  docker-crawler:
+    image: alannesta/crawler-service:0.1.2
+    restart: always
+    depends_on:
+        - docker-redis
+    environment:
+        REDIS_URL: //docker-redis:6379
+        NODE_ENV: docker

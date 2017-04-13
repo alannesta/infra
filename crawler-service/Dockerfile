@@ -6,6 +6,4 @@ WORKDIR /app
 
 RUN npm install --production
 
-EXPOSE 4303
-
 CMD ["npm", "start"]
