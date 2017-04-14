@@ -1,8 +1,6 @@
 const createRedisConnection = require('../redis-connector');
 const logger = require('./logger');
 
-const redisClient = createRedisConnection();
-
 const miningService = {
 	dedupeVideos: function(videos, callback) {
 		dedupeWithFreqMap(videos, callback);
@@ -10,9 +8,11 @@ const miningService = {
 } ;
 
 function dedupeWithFreqMap(rawData, callback) {
+	const redisClient = createRedisConnection();
 	let collection = [...rawData];
 	let dupeMap = {};
 	let threshold = 5;
+
 	logger.debug('start generate filter words from frequency map');
 	console.time('filter_words');
 
@@ -35,7 +35,7 @@ function dedupeWithFreqMap(rawData, callback) {
 				if (maxLen > 7) {
 					let dupeStr = collection[i].substring(endIndexA - maxLen + 1, endIndexA + 1);
 					if (typeof dupeMap[dupeStr] === 'number') {
-						dupeMap[dupeStr]++;
+						dupeMap[dupeStr] += 1;
 					}else {
 						dupeMap[dupeStr] = 1;
 					}
@@ -43,15 +43,20 @@ function dedupeWithFreqMap(rawData, callback) {
 				}
 			}
 		}
-		redisClient.set('frequency-map', JSON.stringify(dupeMap));
 		let frequentWords = highFreq(dupeMap, threshold);
+		logger.debug('frequent words: ' + frequentWords);
 		console.timeEnd('filter_words');
-		callback(null, dedupe(rawData, frequentWords));
+		redisClient.set('frequency-map', JSON.stringify(dupeMap), function(err) {
+			logger.debug('mining-service::dedupeWithFreqMap: saving map: ', dupeMap);
+			redisClient.quit();
+		});
 
+		callback(null, dedupe(rawData, frequentWords));
 	});
 }
 
 function dedupe(rawData, filterWords) {
+	logger.debug('mining-service::dedupe -> original items: ', rawData);
 	let collection = [...rawData];
 	let removed = [];
 	logger.debug('start dedupe');
@@ -75,9 +80,6 @@ function dedupe(rawData, filterWords) {
 	let result = collection.filter((word) => {
 		return word.length > 0;
 	});
-
-	// fs.writeFileSync('../data/raw_dedupe_nodejs', result.join('\n'));
-	// fs.writeFileSync('../data/deleted_ids_nodejs', deletedIds.join('\n'));
 
 	return result;
 }

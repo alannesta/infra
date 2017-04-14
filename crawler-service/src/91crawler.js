@@ -4,15 +4,15 @@ const crawlerService = require('./service/crawler-service');
 const miningService = require('./service/mining-service');
 const createRedisConnection = require('./redis-connector');
 
-// TODO: configuration with env variables
-const pubClient = createRedisConnection('//127.0.0.1:6379');	// redis connection for GET/SET/PUB
-const subClient = createRedisConnection('//127.0.0.1:6379');	// redis connection for subscribe
+const subClient = createRedisConnection();	// redis connection for subscribe
 const logger = require('./service/logger');
 
 subClient.subscribe('crawl-job');
 // TODO: init freq map from persistence file?
 
 subClient.on("message", function (channel, message) {
+	const pubClient = createRedisConnection();
+
 	crawlJob(function notify(err, result) {
 		if (err) {
 			console.log(err);
@@ -20,6 +20,7 @@ subClient.on("message", function (channel, message) {
 
 		// !!! A client subscribed to one or more channels could not issue commands (GET, PUBLISH, SET)
 		pubClient.publish('crawl-report', JSON.stringify(result));
+		pubClient.quit();
 		logger.debug('crawl results: ', result.length);
 	});
 });

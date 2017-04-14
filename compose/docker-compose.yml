@@ -4,11 +4,11 @@ services:
     image: alannesta/redis:0.1.3  # 0.1.3 fixes the host binding issue in config
     ports:
         - "6379:6379"
-    restart: always
+    restart: unless-stopped
 
   docker-crawler:
-    image: alannesta/crawler-service:0.1.2
-    restart: always
+    image: alannesta/crawler-service:0.1.3
+    restart: unless-stopped
     depends_on:
         - docker-redis
     environment:

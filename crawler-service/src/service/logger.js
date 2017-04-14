@@ -36,10 +36,12 @@ function getTransportConfig(env) {
 			stderrLevels: ['error'],
 		}),
 		 new (winston.transports.File)({
-		 	filename: path.join(os.homedir(), 'logs/crawler-service.log'),
-		 	level: 'debug',
-		 	handleExceptions: true,
-		 	maxsize: 500000,
+			filename: path.join(os.homedir(), 'logs/crawler-service.log'),
+			level: 'debug',
+			handleExceptions: true,
+			maxsize: 500000,
+			json: false,
+			prettyPrint: true
 		 }),
 	];
 }
