@@ -37,14 +37,14 @@ function dedupeWithFreqMap(rawData, callback) {
 					if (typeof dupeMap[dupeStr] === 'number') {
 						dupeMap[dupeStr] += 1;
 					}else {
-						dupeMap[dupeStr] = 1;
+						dupeMap[dupeStr] = 2;
 					}
 					collection[j] = '';
 				}
 			}
 		}
 		let frequentWords = highFreq(dupeMap, threshold);
-		logger.debug('frequent words: ' + frequentWords);
+		logger.debug('frequent words: ', frequentWords);
 		console.timeEnd('filter_words');
 		redisClient.set('frequency-map', JSON.stringify(dupeMap), function(err) {
 			logger.debug('mining-service::dedupeWithFreqMap: saving map: ', dupeMap);
@@ -67,16 +67,16 @@ function dedupe(rawData, filterWords) {
 		}
 		for (var j = i + 1; j < collection.length; j++) {
 			if (collection[j].length > 0) {
-				let {maxLen} = DPLCS(filterJunkWord(collection[i], filterWords), collection[j]);
-				if (maxLen > 7) {
+				let {maxLen} = DPLCS(filterJunkWord(collection[i], filterWords), filterJunkWord(collection[j], filterWords));
+				if (maxLen >= 7) {
 					removed.push(collection[j]);
 					collection[j] = '';
 				}
 			}
 		}
 	}
-	console.timeEnd('dedupe');
 	logger.debug('mining-service::dedupe -> removed items: ', removed);
+	console.timeEnd('dedupe');
 	let result = collection.filter((word) => {
 		return word.length > 0;
 	});
@@ -94,7 +94,7 @@ function highFreq(map, threshold = 5) {
 function filterJunkWord(str, filters) {
 	for (let i = 0; i < filters.length; i++) {
 		if(str.indexOf(filters[i]) > -1) {
-			return str.replace(filters[i], '');
+			str = str.replace(filters[i], '');
 		}
 	}
 	return str;
