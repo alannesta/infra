@@ -36,7 +36,7 @@ function dedupeWithFreqMap(rawData, callback) {
 					let dupeStr = collection[i].substring(endIndexA - maxLen + 1, endIndexA + 1);
 					if (typeof dupeMap[dupeStr] === 'number') {
 						dupeMap[dupeStr] += 1;
-					}else {
+					} else {
 						dupeMap[dupeStr] = 2;
 					}
 					collection[j] = '';
