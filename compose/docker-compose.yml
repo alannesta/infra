@@ -1,7 +1,7 @@
 version: '2'
 services:
   docker-redis:
-    image: alannesta/redis:0.1.3  # 0.1.3 fixes the host binding issue in config
+    image: alannesta/redis:0.2.0  # 0.2.0 persist local file
     ports:
         - "6379:6379"
     restart: unless-stopped

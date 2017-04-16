@@ -13,8 +13,8 @@ function dedupeWithFreqMap(rawData, callback) {
 	let dupeMap = {};
 	let threshold = 5;
 
-	logger.debug('start generate filter words from frequency map');
-	console.time('filter_words');
+	logger.debug('----- start generate filter words from frequency map ------');
+	// console.time('filter_words');
 
 	redisClient.get('frequency-map', function(err, map) {
 		try {
@@ -44,8 +44,8 @@ function dedupeWithFreqMap(rawData, callback) {
 			}
 		}
 		let frequentWords = highFreq(dupeMap, threshold);
-		logger.debug('frequent words: ', frequentWords);
-		console.timeEnd('filter_words');
+		logger.debug('generated frequent words: ', frequentWords);
+		// console.timeEnd('filter_words');
 		redisClient.set('frequency-map', JSON.stringify(dupeMap), function(err) {
 			logger.debug('mining-service::dedupeWithFreqMap: saving map: ', dupeMap);
 			redisClient.quit();
@@ -56,11 +56,11 @@ function dedupeWithFreqMap(rawData, callback) {
 }
 
 function dedupe(rawData, filterWords) {
-	logger.debug('mining-service::dedupe -> original items: ', rawData);
 	let collection = [...rawData];
 	let removed = [];
-	logger.debug('start dedupe');
-	console.time('dedupe');
+	logger.debug('-------- start dedupe ---------');
+	logger.debug('mining-service::dedupe -> original items: ', rawData);
+	// console.time('dedupe');
 	for (var i = 0; i < collection.length; i++) {
 		if (collection[i].length === 0) {
 			continue;
@@ -76,7 +76,7 @@ function dedupe(rawData, filterWords) {
 		}
 	}
 	logger.debug('mining-service::dedupe -> removed items: ', removed);
-	console.timeEnd('dedupe');
+	// console.timeEnd('dedupe');
 	let result = collection.filter((word) => {
 		return word.length > 0;
 	});
