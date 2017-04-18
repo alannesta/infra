@@ -11,11 +11,16 @@ function getTransportConfig(env) {
 		return [
 			new (winston.transports.Console)({
 				level: 'info',
+				handleExceptions: true,
+				humanReadableUnhandledException: true,
 				stderrLevels: ['error'],	// this will affect pm2 logs on prod
 			}),
 			new (winston.transports.File)({
 				filename: process.env.SERVER_LOG_FILE || path.join(os.homedir(), 'logs/crawler-service.log'),
 				level: 'info',
+				handleExceptions: true,
+				humanReadableUnhandledException: true,
+				json: false,
 				maxsize: 500000,
 			}),
 		];
@@ -24,6 +29,8 @@ function getTransportConfig(env) {
 		return [
 			new (winston.transports.Console)({
 				level: 'debug',
+				handleExceptions: true,
+				humanReadableUnhandledException: true,
 				stderrLevels: ['error'],
 			}),
 		];
@@ -33,41 +40,19 @@ function getTransportConfig(env) {
 	return [
 		new (winston.transports.Console)({
 			level: 'debug',
-			stderrLevels: ['error'],
+			handleExceptions: true,
+			humanReadableUnhandledException: true,
+			stderrLevels: ['error'],	// this will affect pm2 logs on prod
 		}),
 		new (winston.transports.File)({
 			filename: path.join(os.homedir(), 'logs/crawler-service.log'),
 			level: 'debug',
 			handleExceptions: true,
+			humanReadableUnhandledException: true,
 			maxsize: 500000,
 			json: false,
-			prettyPrint: function(object) {
-				return JSON.stringify(object);
-			}
 		}),
 	];
 }
-
-logger.flushAndExit = function(err) {
-	logger.error(err, function() {
-		var numFlushes = 0;
-		var numFlushed = 0;
-		Object.keys(logger.transports).forEach(function(k) {
-			if (logger.transports[k]._stream) {
-				numFlushes += 1;
-				logger.transports[k]._stream.once('finish', function() {
-					numFlushed += 1;
-					if (numFlushes === numFlushed) {
-						process.exit(1);
-					}
-				});
-				logger.transports[k]._stream.end();
-			}
-		});
-		if (numFlushes === 0) {
-			process.exit(1);
-		}
-	});
-};
 
 module.exports = logger;
