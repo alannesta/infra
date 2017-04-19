@@ -9,10 +9,11 @@ const subClient = createRedisConnection();	// redis connection for subscribe
 const logger = require('./utils/logger');
 
 subClient.subscribe('crawl-job');
+subClient.subscribe('parse-job');
 // TODO: init freq map from persistence file?
 
 subClient.on("message", function (channel, message) {
-	const pubClient = createRedisConnection();
+	let pubClient = createRedisConnection();
 	if (channel === 'crawl-job') {
 		crawlJob(function notify(err, result) {
 			if (err) {
@@ -30,7 +31,7 @@ subClient.on("message", function (channel, message) {
 			if (err) {
 				return logger.error(err);
 			}
-			pubClient.publish('parse-report', result)
+			pubClient.publish('parse-report', result);
 			pubClient.quit();
 			logger.debug('parse results: ', result);
 		});
@@ -39,7 +40,7 @@ subClient.on("message", function (channel, message) {
 });
 
 function crawlJob(callback) {
-	let urlPool = [];
+	let urlPool = [ ];
 	let fetchedVideos = [];
 
 	const crawlStatistic = {

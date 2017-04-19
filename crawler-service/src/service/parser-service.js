@@ -23,7 +23,6 @@ var Parser = {
 			2: 'VIDEO_NOT_FOUND',
 			3: 'DAILY_LIMIT_REACHED',
 		};
-		logger.debug('fallback to legacy url parser');
 
 		phantomProcess.stdout.on('data', (data) => {
 			logger.debug(`Phantom stdout: ${data}`);
