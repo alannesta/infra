@@ -25,10 +25,10 @@ subClient.on("message", function (channel, message) {
 			logger.debug('crawl results: ', result.length);
 		});
 	} else if (channel === 'parse-job') {
-		logger.debug('url: ' + message);
 		let process = parserService.spawnPhantomProcess(message);
 		parserService.resolveVideoUrl(process, {}, (err, result) => {
 			if (err) {
+				pubClient.quit();
 				return logger.error(err);
 			}
 			pubClient.publish('parse-report', result);

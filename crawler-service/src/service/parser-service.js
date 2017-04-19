@@ -25,7 +25,7 @@ var Parser = {
 		};
 
 		phantomProcess.stdout.on('data', (data) => {
-			logger.debug(`Phantom stdout: ${data}`);
+			// logger.debug(`Phantom stdout: ${data}`);
 		});
 		phantomProcess.stderr.on('data', (data) => {
 			logger.debug(`Phantom stderr: ${data}`);
