@@ -2,27 +2,40 @@ const async = require('async');
 
 const crawlerService = require('./service/crawler-service');
 const miningService = require('./service/mining-service');
+const parserService = require('./service/parser-service');
 const createRedisConnection = require('./redis-connector');
 
 const subClient = createRedisConnection();	// redis connection for subscribe
-const logger = require('./service/logger');
+const logger = require('./utils/logger');
 
 subClient.subscribe('crawl-job');
 // TODO: init freq map from persistence file?
 
 subClient.on("message", function (channel, message) {
 	const pubClient = createRedisConnection();
+	if (channel === 'crawl-job') {
+		crawlJob(function notify(err, result) {
+			if (err) {
+				return logger.error(err);
+			}
+			// !!! A client subscribed to one or more channels could not issue commands (GET, PUBLISH, SET)
+			pubClient.publish('crawl-report', JSON.stringify(result));
+			pubClient.quit();
+			logger.debug('crawl results: ', result.length);
+		});
+	} else if (channel === 'parse-job') {
+		logger.debug('url: ' + message);
+		let process = parserService.spawnPhantomProcess(message);
+		parserService.resolveVideoUrl(process, {}, (err, result) => {
+			if (err) {
+				return logger.error(err);
+			}
+			pubClient.publish('parse-report', result)
+			pubClient.quit();
+			logger.debug('parse results: ', result);
+		});
+	}
 
-	crawlJob(function notify(err, result) {
-		if (err) {
-			console.log(err);
-		}
-
-		// !!! A client subscribed to one or more channels could not issue commands (GET, PUBLISH, SET)
-		pubClient.publish('crawl-report', JSON.stringify(result));
-		pubClient.quit();
-		logger.debug('crawl results: ', result.length);
-	});
 });
 
 function crawlJob(callback) {

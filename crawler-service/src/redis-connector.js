@@ -1,5 +1,5 @@
 const redis = require('redis');
-const logger = require('./service/logger');
+const logger = require('./utils/logger');
 
 
 const getConnection = function(redisUrl) {

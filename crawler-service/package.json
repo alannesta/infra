@@ -12,6 +12,8 @@
   "dependencies": {
     "async": "^2.3.0",
     "cheerio": "^0.22.0",
+    "entities": "^1.1.1",
+    "phantomjs": "^2.1.7",
     "redis": "^2.7.1",
     "request": "^2.81.0",
     "winston": "^2.3.1"

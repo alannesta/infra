@@ -1,5 +1,5 @@
 const createRedisConnection = require('../redis-connector');
-const logger = require('./logger');
+const logger = require('./../utils/logger');
 
 const miningService = {
 	dedupeVideos: function(videos, callback) {
