@@ -40,7 +40,7 @@ subClient.on("message", function (channel, message) {
 });
 
 function crawlJob(callback) {
-	let urlPool = [ ];
+	let urlPool = [];
 	let fetchedVideos = [];
 
 	const crawlStatistic = {
@@ -55,14 +55,15 @@ function crawlJob(callback) {
 			// process.exit(err);
 		}
 
-		miningService.dedupeVideos(fetchedVideos.map((video) => {
-			return video['片名'];
-		}), function dedupeCB(err, dedupedTitles) {
-			const dedupedVideos = fetchedVideos.filter((video) => {
-				return dedupedTitles.indexOf(video['片名']) > -1;
-			});
-			callback(null, dedupedVideos);
-		});
+		callback(null, fetchedVideos);		// return without dedupe for now
+		// miningService.dedupeVideos(fetchedVideos.map((video) => {
+		// 	return video['片名'];
+		// }), function dedupeCB(err, dedupedTitles) {
+		// 	const dedupedVideos = fetchedVideos.filter((video) => {
+		// 		return dedupedTitles.indexOf(video['片名']) > -1;
+		// 	});
+		// 	callback(null, dedupedVideos);
+		// });
 	});
 
 
