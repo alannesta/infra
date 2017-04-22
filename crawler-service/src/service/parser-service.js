@@ -6,7 +6,7 @@ var util = require('../utils/service-util');
 
 var Parser = {
 	spawnPhantomProcess: (pageUrl) => {
-		var phantomProcess = spawn('phantomjs', [path.join(process.cwd(), 'utils/video-resolver-html5.js'), pageUrl]);
+		var phantomProcess = spawn('phantomjs', [path.join(process.cwd(), 'src/utils/video-resolver-html5.js'), pageUrl]);
 		logger.info(`Start resolving address from ${pageUrl}`);
 		return phantomProcess;
 	},

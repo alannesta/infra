@@ -1,4 +1,4 @@
-FROM node:6.10-alpine
+FROM node:6.9.4
 
 COPY . /app
 

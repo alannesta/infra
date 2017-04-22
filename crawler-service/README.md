@@ -7,3 +7,8 @@ Integration of the parsing service
 ## 0.2.2
 
 Crawler: skip deduping, return raw data
+
+## 0.2.5
+
+Fix phantomjs issues. phantomjs not working on alpine versions
+
