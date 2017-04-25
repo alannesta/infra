@@ -9,8 +9,12 @@ const subClient = createRedisConnection();	// redis connection for subscribe
 const logger = require('./utils/logger');
 
 subClient.subscribe('crawl-job');
-subClient.subscribe('parse-job');
+subClient.psubscribe('parse-job##*');
 // TODO: init freq map from persistence file?
+
+subClient.on('connect', () => {
+	logger.info('Mirco Services started, redis connection success');
+});
 
 subClient.on("message", function (channel, message) {
 	let pubClient = createRedisConnection();
@@ -22,21 +26,26 @@ subClient.on("message", function (channel, message) {
 			// !!! A client subscribed to one or more channels could not issue commands (GET, PUBLISH, SET)
 			pubClient.publish('crawl-report', JSON.stringify(result));
 			pubClient.quit();
-			logger.debug('crawl results: ', result.length);
+			logger.debug('Crawl finished, publish results(number): ', result.length);
 		});
-	} else if (channel === 'parse-job') {
+	}
+});
+
+subClient.on('pmessage', (pattern, channel, message) => {
+	let pubClient = createRedisConnection();
+	if (pattern === 'parse-job##*') {
+		let jobParams = channel.split('##');
 		let process = parserService.spawnPhantomProcess(message);
 		parserService.resolveVideoUrl(process, {}, (err, result) => {
 			if (err) {
 				pubClient.quit();
 				return logger.error(err);
 			}
-			pubClient.publish('parse-report', result);
+			pubClient.publish(`parse-report##${jobParams[1]}##${jobParams[2]}`, result);
 			pubClient.quit();
-			logger.debug('parse results: ', result);
+			logger.debug('Parse success, publish results: ', result);
 		});
 	}
-
 });
 
 function crawlJob(callback) {
