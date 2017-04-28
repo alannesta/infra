@@ -12,3 +12,6 @@ Crawler: skip deduping, return raw data
 
 Fix phantomjs issues. phantomjs not working on alpine versions
 
+## 0.2.6
+
+Enable parse job, using pmessage(redis pattern message)
