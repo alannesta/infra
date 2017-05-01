@@ -14,3 +14,8 @@ services:
     environment:
         REDIS_URL: //docker-redis:6379
         NODE_ENV: docker
+
+networks:
+  default:
+    external:
+      name: lister_dev
