@@ -1,10 +1,55 @@
 version: '2'
 services:
+  # infra
+  docker-mysql:
+      image: mysql:5.6.33
+      volumes:
+        - ./dump:/docker-entrypoint-initdb.d
+        - ~/Documents/docker-volumes/mysql:/var/lib/mysql
+      ports:
+          - "6033:3306"
+      restart: always
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+
   docker-redis:
-    image: alannesta/redis:0.2.0  # 0.2.0 persist local file
+      image: alannesta/redis:0.2.0
+      ports:
+          - "6379:6379"
+      restart: unless-stopped
+
+  docker-elasticsearch:
+      image: elasticsearch:2.3
+      volumes:
+        - ~/Documents/docker-volumes/elasticsearch/data:/usr/share/elasticsearch/data
+      restart: always
+      ports:
+        - "9201:9200"
+
+  docker-nginx:
+      image: alannesta/lister-nginx:0.1.2
+      ports:
+        - "8080:80"
+      depends_on:
+        - lister-backend
+      restart: unless-stopped
+
+  # services
+
+  lister-backend:
+    depends_on:
+      - docker-mysql
+      - docker-elasticsearch
+    image: alannesta/lister-backend:1.1.0
     ports:
-        - "6379:6379"
-    restart: unless-stopped
+      - "4302:4302"
+    environment:
+      NODE_ENV: docker
+      MYSQL_HOST: docker-mysql
+      MYSQL_PORT: 3306
+      ELASTICSEARCH_HOST: docker-elasticsearch
+      CRAWLER_URL_POOL: "[\"http://email.91dizhi.at.gmail.com.8h5.space/v.php?category=hot&viewtype=basic&page=1\",\"http://email.91dizhi.at.gmail.com.8h5.space/v.php?category=hot&viewtype=basic&page=2\",\"http://email.91dizhi.at.gmail.com.8h5.space/v.php?category=hot&viewtype=basic&page=3\"]"
+      REDIS_URL: //docker-redis:6379
 
   docker-crawler:
     image: alannesta/crawler-service:0.2.6
